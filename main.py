@@ -55,16 +55,16 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     # TODO: Implement function
-    conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same",
+    conv_1x1 = tf.layers.conv2d(vgg_layer7_out, 512, 1, padding="same",
                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="conv_1x1")
-    output_1 = tf.layers.conv2d_transpose(conv_1x1, num_classes, 4, 2, padding="same",
+    output_1 = tf.layers.conv2d_transpose(conv_1x1, 512, 4, 2, padding="same",
                                              kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_1")
 
     add_1 = tf.add(output_1, vgg_layer4_out, name="add_1")
-    output_2 = tf.layers.conv2d_transpose(add_1, num_classes, 4, 2, padding="same",
+    output_2 = tf.layers.conv2d_transpose(add_1, 256, 4, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_2")
 
-    add_2 = tf.add(conv_1x1_2, vgg_layer7_out, name="add_2")
+    add_2 = tf.add(output_2, vgg_layer3_out, name="add_2")
     output_3 = tf.layers.conv2d_transpose(add_2, num_classes, 16, 8, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_3")
     return output_3
