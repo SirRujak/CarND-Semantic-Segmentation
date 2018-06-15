@@ -118,7 +118,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
             average_loss += loss
 
             if counter % 1000 == 0:
-                print("Current loss:, {}. Average loss for set: {}.".format(loss, average_loss)
+                print("Current loss:, {}. Average loss for set: {}.".format(loss, average_loss))
                 average_loss = 0
         ## Save the network here.
         save_path = saver.save(sess, "data/models/final_model")
