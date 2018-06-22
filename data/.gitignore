@@ -3,6 +3,5 @@ vgg/
 gtFine_trainvaltest/
 
 models/
-runs/
 
 vgg16.npy
