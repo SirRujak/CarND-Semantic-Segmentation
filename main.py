@@ -55,19 +55,19 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     # TODO: Implement function
-    conv_1x1 = tf.layers.conv2d(vgg_layer7_out, 4096, 1, padding="same",
+    conv_1x1 = tf.layers.conv2d(vgg_layer7_out, 2, 1, padding="same",
                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="conv_1x1")
     output_1 = tf.layers.conv2d_transpose(conv_1x1, 512, 4, 2, padding="same",
                                              kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_1")
 
     add_1 = tf.concat([output_1, vgg_layer4_out], -1, name="add_1")
-    output_2 = tf.layers.conv2d_transpose(add_1, 256, 4, 2, padding="same",
+    output_2 = tf.layers.conv2d_transpose(add_1, 2, 4, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_2")
 
     add_2 = tf.concat([output_2, vgg_layer3_out], -1, name="add_2")
-    output_3_1 = tf.layers.conv2d_transpose(add_2, 16, 2, 2, padding="same",
+    output_3_1 = tf.layers.conv2d_transpose(add_2, 2, 2, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_4")
-    output_3_2 = tf.layers.conv2d_transpose(output_3_1, 16, 2, 2, padding="same",
+    output_3_2 = tf.layers.conv2d_transpose(output_3_1, 2, 2, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_5")
     output_3 = tf.layers.conv2d_transpose(output_3_2, num_classes, 4, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_3")
@@ -118,7 +118,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         average_loss = 0
         for image, label in get_batches_fn(batch_size):
             counter += batch_size
-            feed_dict = {input_image:image, correct_label:label, keep_prob:0.5, learning_rate:0.0001}
+            feed_dict = {input_image:image, correct_label:label, keep_prob:0.1, learning_rate:0.0001}
             _, loss = sess.run((train_op, cross_entropy_loss), feed_dict=feed_dict)
             average_loss += loss
             #print(counter)
@@ -162,7 +162,7 @@ def run():
         output_layer = layers(vgg_l3, vgg_l4, vgg_l7, num_classes)
 
         correct_label = tf.placeholder(tf.float32, (None, None, None, num_classes), name="correct_label")
-        learning_rate = tf.Variable(0, name="learning_rate", dtype=tf.float32)
+        learning_rate = tf.Variable(0.0001, name="learning_rate", dtype=tf.float32)
         logits, train_op, loss = optimize(output_layer, correct_label, learning_rate, num_classes)
         "Network built..."
 
