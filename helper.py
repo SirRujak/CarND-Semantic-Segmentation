@@ -94,8 +94,8 @@ def gen_batch_function(data_folder, image_shape):
                 gt_or = np.all(gt_image == other_road_color, axis=2)
                 gt_or = gt_or.reshape(*gt_or.shape, 1)
                 gt_r = np.invert(gt_bg + gt_or)
-                #gt_image = np.concatenate((gt_bg, np.invert(gt_bg)), axis=2)
-                gt_image = np.concatenate((gt_bg, gt_r, gt_or), axis=2)
+                gt_image = np.concatenate((gt_bg, np.invert(gt_bg)), axis=2)
+                #gt_image = np.concatenate((gt_bg, gt_r, gt_or), axis=2)
 
                 images.append(image)
                 gt_images.append(gt_image)

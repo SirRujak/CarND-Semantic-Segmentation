@@ -1,5 +1,6 @@
 import os.path
 import tensorflow as tf
+from tensorflow import contrib
 import helper
 import warnings
 from distutils.version import LooseVersion
@@ -55,6 +56,42 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     # TODO: Implement function
+    ## Atrous pyramid.
+    #atrous_1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", dilation_rate=(1, 1),
+    #                                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_1x1")
+    #atrous_2 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", dilation_rate=(3, 3),
+    #                                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_3x3")
+    #atrous_3 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", dilation_rate=(12, 12),
+    #                                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_12x12")
+    #atrous_4 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", dilation_rate=(18, 18),
+    #                                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_18x18")
+    #atrous_5 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", name="atrous_pool")
+
+    #atrous_pyramid = tf.concat([atrous_1, atrous_2, atrous_3, atrous_4, atrous_5], -1, name="atrous_pyramid")
+    #atrous_pyramid = atrous_1 + atrous_2 + atrous_3 + atrous_4 + atrous_5
+    atrous_pyramid = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same",
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    atrous_expanded = tf.layers.conv2d_transpose(atrous_pyramid, num_classes, 2, 2, padding="same",
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_expanded")
+
+    vgg_layer4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1,
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), padding="same")
+    #add_1 = tf.concat([atrous_expanded, vgg_layer4_1x1], -1, name="add_1")
+    add_1 = atrous_expanded + vgg_layer4_1x1
+    output_2 = tf.layers.conv2d_transpose(add_1, num_classes, 4, 2, padding="same",
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_2")
+
+    vgg_layer3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding="same")
+    #add_2 = tf.concat([output_2, vgg_layer3_1x1], -1, name="add_2")
+    add_2 = output_2 + vgg_layer3_1x1
+    output_3_1 = tf.layers.conv2d_transpose(add_2, num_classes, 2, 2, padding="same",
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_3")
+    output_3_2 = tf.layers.conv2d_transpose(output_3_1, num_classes, 2, 2, padding="same",
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_4")
+    final_output = tf.layers.conv2d_transpose(output_3_2, num_classes, 4, 2, padding="same",
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_5")
+
+    '''
     conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same",
                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="conv_1x1")
     output_1 = tf.layers.conv2d_transpose(conv_1x1, num_classes, 4, 2, padding="same",
@@ -72,7 +109,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     final_output = tf.layers.conv2d_transpose(output_3_2, num_classes, 4, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_3")
     #conv_1x1 = tf.Print(conv_1x1, [tf.shape(conv_1x1)])
-
+    '''
     ## Second tower.
     #batch_size = tf.shape(conv_1x1)[0]
     #output_non_conv = tf.layers.dense(conv_1x1, 2,
@@ -84,6 +121,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
 
     #add_1_tower_2 = tf.concat([output_1_tower_2, vgg_layer4_out], -1, name="add_1_tower_2")
     '''
+    
     conv_1x1_tower_2 = tf.layers.conv2d(vgg_layer4_out, 32, 1, padding="same",
                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="conv_1x1_tower_2")
     output_2_tower_2 = tf.layers.conv2d_transpose(conv_1x1_tower_2, 2, 4, 2, padding="same",
@@ -99,7 +137,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_3_tower_2")
     output_concat = tf.concat([output_3, output_3_tower_2], -1, name="concat_output")
     '''
-    
+    '''
     ## Tower 3
     output_3_1_tower_3 = tf.layers.conv2d_transpose(vgg_layer3_out, 16, 2, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_4_tower_3")
@@ -113,8 +151,11 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     final_output = tf.layers.conv2d(output_concat, num_classes, 1, padding="same",
                                 kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_conv")
     
-
+    '''
     return final_output
+    
+    #return conv_3x3
+    #return vgg_layer7_out
 tests.test_layers(layers)
 
 
@@ -134,7 +175,8 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     regularizer_losses = tf.losses.get_regularization_loss()
     normalizer = tf.constant(1.0)
     total_loss = cross_entropy_loss + regularizer_losses * normalizer
-    train_op = tf.train.AdamOptimizer(1e-4).minimize(total_loss)
+    #train_op = tf.contrib.opt.NadamOptimizer().minimize(total_loss)
+    train_op = tf.train.AdamOptimizer().minimize(total_loss)
     return logits, train_op, total_loss
 tests.test_optimize(optimize)
 
@@ -162,7 +204,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         average_loss = 0
         for image, label in get_batches_fn(batch_size):
             counter += batch_size
-            feed_dict = {input_image:image, correct_label:label, keep_prob:0.5, learning_rate:0.001}
+            feed_dict = {input_image:image, correct_label:label, keep_prob:0.75, learning_rate:0.001}
             _, loss = sess.run((train_op, cross_entropy_loss), feed_dict=feed_dict)
             average_loss += loss
             #print(counter)
@@ -176,7 +218,7 @@ tests.test_train_nn(train_nn)
 
 
 def run():
-    num_classes = 3
+    num_classes = 2
     image_shape = (160, 576)
     data_dir = './data'
     runs_dir = './runs'
@@ -206,13 +248,13 @@ def run():
         output_layer = layers(vgg_l3, vgg_l4, vgg_l7, num_classes)
 
         correct_label = tf.placeholder(tf.float32, (None, None, None, num_classes), name="correct_label")
-        learning_rate = tf.Variable(0.0001, name="learning_rate", dtype=tf.float32)
+        learning_rate = tf.Variable(0.001, name="learning_rate", dtype=tf.float32)
         logits, train_op, loss = optimize(output_layer, correct_label, learning_rate, num_classes)
         "Network built..."
 
         # TODO:? Train NN using the train_nn function
         print("Initializing network...")
-        epochs = 32
+        epochs = 4
         batch_size = 8
 
         init_op = tf.global_variables_initializer()
