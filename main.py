@@ -57,36 +57,36 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
     # TODO: Implement function
     ## Atrous pyramid.
-    #atrous_1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", dilation_rate=(1, 1),
-    #                                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_1x1")
-    #atrous_2 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", dilation_rate=(3, 3),
-    #                                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_3x3")
-    #atrous_3 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", dilation_rate=(12, 12),
-    #                                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_12x12")
-    #atrous_4 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", dilation_rate=(18, 18),
-    #                                                kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_18x18")
-    #atrous_5 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same", name="atrous_pool")
+    atrous_1 = tf.layers.conv2d(vgg_layer7_out, 128, 1, padding="same", dilation_rate=(1, 1),
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_1x1")
+    atrous_2 = tf.layers.conv2d(vgg_layer7_out, 128, 1, padding="same", dilation_rate=(3, 3),
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_3x3")
+    atrous_3 = tf.layers.conv2d(vgg_layer7_out, 128, 1, padding="same", dilation_rate=(12, 12),
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_12x12")
+    atrous_4 = tf.layers.conv2d(vgg_layer7_out, 128, 1, padding="same", dilation_rate=(18, 18),
+                                                    kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_18x18")
+    atrous_5 = tf.layers.conv2d(vgg_layer7_out, 128, 1, padding="same", name="atrous_pool")
 
-    #atrous_pyramid = tf.concat([atrous_1, atrous_2, atrous_3, atrous_4, atrous_5], -1, name="atrous_pyramid")
+    atrous_pyramid = tf.concat([atrous_1, atrous_2, atrous_3, atrous_4, atrous_5], -1, name="atrous_pyramid")
     #atrous_pyramid = atrous_1 + atrous_2 + atrous_3 + atrous_4 + atrous_5
-    atrous_pyramid = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding="same",
+    atrous_pyramid = tf.layers.conv2d(vgg_layer7_out, 128, 1, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    atrous_expanded = tf.layers.conv2d_transpose(atrous_pyramid, num_classes, 2, 2, padding="same",
+    atrous_expanded = tf.layers.conv2d_transpose(atrous_pyramid, 128, 2, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="atrous_expanded")
 
-    vgg_layer4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1,
+    vgg_layer4_1x1 = tf.layers.conv2d(vgg_layer4_out, 128, 1,
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), padding="same")
     #add_1 = tf.concat([atrous_expanded, vgg_layer4_1x1], -1, name="add_1")
     add_1 = atrous_expanded + vgg_layer4_1x1
-    output_2 = tf.layers.conv2d_transpose(add_1, num_classes, 4, 2, padding="same",
+    output_2 = tf.layers.conv2d_transpose(add_1, 32, 4, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_2")
 
-    vgg_layer3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding="same")
+    vgg_layer3_1x1 = tf.layers.conv2d(vgg_layer3_out, 32, 1, padding="same")
     #add_2 = tf.concat([output_2, vgg_layer3_1x1], -1, name="add_2")
     add_2 = output_2 + vgg_layer3_1x1
-    output_3_1 = tf.layers.conv2d_transpose(add_2, num_classes, 2, 2, padding="same",
+    output_3_1 = tf.layers.conv2d_transpose(add_2, 16, 2, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_3")
-    output_3_2 = tf.layers.conv2d_transpose(output_3_1, num_classes, 2, 2, padding="same",
+    output_3_2 = tf.layers.conv2d_transpose(output_3_1, 4, 2, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_4")
     final_output = tf.layers.conv2d_transpose(output_3_2, num_classes, 4, 2, padding="same",
                                                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3), name="output_5")
@@ -254,7 +254,7 @@ def run():
 
         # TODO:? Train NN using the train_nn function
         print("Initializing network...")
-        epochs = 4
+        epochs = 8
         batch_size = 8
 
         init_op = tf.global_variables_initializer()
