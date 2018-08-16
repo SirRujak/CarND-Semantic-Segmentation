@@ -1,6 +1,10 @@
 # Semantic Segmentation
 ### Introduction
-In this project, you'll label the pixels of a road in images using a Fully Convolutional Network (FCN).
+In this project road image pixel labes were classified using a Fully Convolutional Network (FCN).
+
+[image1]: ./runs/1534447570.8183498/umm_000090.png "Good Example"
+[image2]: ./runs/1534448426.3902185/uu_000011.png "Bad Example"
+
 
 ### Setup
 ##### GPU
@@ -14,10 +18,9 @@ Make sure you have the following is installed:
 ##### Dataset
 Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).  Extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
 
-### Start
+### Writeup
 ##### Implement
-Implement the code in the `main.py` module indicated by the "TODO" comments.
-The comments indicated with "OPTIONAL" tag are not required to complete.
+All of the required TODO functions were completed as required.
 ##### Run
 Run the following command to run the project:
 ```
@@ -25,24 +28,35 @@ python main.py
 ```
 **Note** If running this in Jupyter Notebook system messages, such as those regarding test status, may appear in the terminal rather than the notebook.
 
-### Submission
-1. Ensure you've passed all the unit tests.
-2. Ensure you pass all points on [the rubric](https://review.udacity.com/#!/rubrics/989/view).
-3. Submit the following in a zip file.
- - `helper.py`
- - `main.py`
- - `project_tests.py`
- - Newest inference images from `runs` folder  (**all images from the most recent run**)
- 
- ### Tips
-- The link for the frozen `VGG16` model is hardcoded into `helper.py`.  The model can be found [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/vgg.zip)
-- The model is not vanilla `VGG16`, but a fully convolutional version, which already contains the 1x1 convolutions to replace the fully connected layers. Please see this [forum post](https://discussions.udacity.com/t/here-is-some-advice-and-clarifications-about-the-semantic-segmentation-project/403100/8?u=subodh.malgonde) for more information.  A summary of additional points, follow. 
-- The original FCN-8s was trained in stages. The authors later uploaded a version that was trained all at once to their GitHub repo.  The version in the GitHub repo has one important difference: The outputs of pooling layers 3 and 4 are scaled before they are fed into the 1x1 convolutions.  As a result, some students have found that the model learns much better with the scaling layers included. The model may not converge substantially faster, but may reach a higher IoU and accuracy. 
-- When adding l2-regularization, setting a regularizer in the arguments of the `tf.layers` is not enough. Regularization loss terms must be manually added to your loss function. otherwise regularization is not implemented.
- 
-### Using GitHub and Creating Effective READMEs
-If you are unfamiliar with GitHub , Udacity has a brief [GitHub tutorial](http://blog.udacity.com/2015/06/a-beginners-git-github-tutorial.html) to get you started. Udacity also provides a more detailed free [course on git and GitHub](https://www.udacity.com/course/how-to-use-git-and-github--ud775).
+## Contemplation
+A final model was produced through trial and error of both model architecture and hyperperameter tuning.
 
-To learn about REAMDE files and Markdown, Udacity provides a free [course on READMEs](https://www.udacity.com/courses/ud777), as well. 
+### My final model consisted of the following layers:
 
-GitHub also provides a [tutorial](https://guides.github.com/features/mastering-markdown/) about creating Markdown files.
+| Layer         		|     Description	        					| 
+|:---------------------:|:---------------------------------------------:| 
+| Input         		|  RGB image   							| 
+| VGG16 Pretrained Layer     	| N/A 	|
+| Atrous Convolution Dilation 1x1					|	1x1 stride, same padding, l2_regularization											|
+| Atrous Convolution Dilation 3x3					|	1x1 stride, same padding, l2_regularization											|
+| Atrous Convolution Dilation 6x6					|	1x1 stride, same padding, l2_regularization											|
+| Atrous Convolution Dilation 1x1					|	1x1 stride, same padding, l2_regularization											|
+| Convolution 1x1 of VGG_LAYER7_OUT					|	1x1 stride, same padding, l2_regularization											|
+| Concatenation of Previous Layers	      	|  				|
+| Convolution 1x1					|	1x1 stride, same padding, l2_regularization											|
+| Convolution Transpose 2x2					|	2x2 stride, same padding, l2_regularization											|
+| Convolution 1x1	of VGG_LAYER4_OUT				|	1x1 stride, same padding, l2_regularization											|
+| Add Previos Two Convolutions |     |
+| Convolution Transpose 2x2					|	2x2 stride, same padding, l2_regularization											|
+| Convolution 1x1	of VGG_LAYER3_OUT				|	1x1 stride, same padding, l2_regularization											|
+| Add Previos Two Convolutions |     |
+| Convolution Transpose 2x2					|	2x2 stride, same padding, l2_regularization											|
+| Convolution Transpose 2x2					|	2x2 stride, same padding, l2_regularization											|
+| Convolution Transpose 2x2					|	2x2 stride, same padding, l2_regularization											|
+
+An Adam optimizer was chosen for the network and used a scalled sum of the cross entropy loss and regularizar loss from the individual layers. 
+
+## Results
+The model can be consistently trained to a loss of roughly 0.06 across multiple runs. Overfitting issues begin to appear at about this level so the number of epochs was limited to 12 for each training run. As can be seen in the images below, there are instances where the network performs very well such as on a straight clean street whereas shadows tend to cause considerable issues.
+
+![alt text][image1] ![alt text][image2]
